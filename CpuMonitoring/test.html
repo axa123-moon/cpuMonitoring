@@ -134,10 +134,23 @@
                     animateScale: false,
                     animateRotate: true
                 },
+                plugins: {
+                    datalabels: {
+                        color: 'white',
+                        display: function (context) {
+                            return context.dataset.data[context.dataIndex] > 0;
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 16
+                        },
+                        //formatter: Math.round
+                    }
+                }
             }
         };
 
-        var configBar = {
+         var configBar = {
             type: 'bar',
             data: {
                 labels: ['DISK #1', 'DISK #2'],
@@ -183,6 +196,26 @@
                             max: 100
                         }
                     }]
+                },
+                plugins: {
+                    datalabels: {
+                        align: 'end',
+                        anchor: 'end',
+                        color: function (context) {
+                            return context.dataset.backgroundColor;
+                        },
+                        font: function (context) {
+                            var w = context.chart.width;
+                            return {
+                                size: w < 512 ? 12 : 14,
+                                weight: 'bold',
+                            };
+                        },
+                        display: function (context) {
+                            return context.dataset.data[context.dataIndex] > 0;
+                        },
+                        //formatter: Math.round
+                    }
                 }
             }
         };
