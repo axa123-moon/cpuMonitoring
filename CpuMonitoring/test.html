@@ -6,7 +6,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <!--script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.bundle.min.js"></script-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-    <!--script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0"></script-->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0"></script>
     <script type="text/javascript" src="https://www.chartjs.org/samples/latest/utils.js"></script>
     <script>
         var count = 0;
@@ -27,6 +27,10 @@
                     ],
                     fill: false,
                     lineTension: 0,
+                    datalabels: {
+                        align: 'start',
+                        anchor: 'start'
+                    }
                 }, {
                     label: 'Memory Usage',
                     backgroundColor: window.chartColors.blue,
@@ -36,6 +40,10 @@
                     ],
                     fill: false,
                     lineTension: 0,
+                    datalabels: {
+                        align: 'end',
+                        anchor: 'end'
+                    }
                 }]
             },
             options: {
@@ -72,7 +80,25 @@
                             max: 100
                         }
                     }]
-                }
+                },
+                plugins: {
+                    datalabels: {
+                        backgroundColor: function (context) {
+                            return context.dataset.backgroundColor;
+                        },
+                        borderRadius: 4,
+                        color: 'white',
+                        display: function (context) {
+                            return context.dataset.data[context.dataIndex] > 90;
+                        },
+                        font: {
+                            weight: 'bold',
+                            size:16
+                        },
+                        formatter: Math.round,
+                        padding: 6
+                    }
+                },
             }
         };
         var configPie = {
@@ -105,11 +131,8 @@
                     fontSize: 24
                 },
                 animation: {
-                    animateScale: true,
+                    animateScale: false,
                     animateRotate: true
-                },
-                labels: {
-                    render: 'label'
                 },
             }
         };
@@ -120,10 +143,11 @@
                 labels: ['DISK #1', 'DISK #2'],
                 datasets: [{
                     label: 'Usage (%)',
+                    barThickness: 50,
                     backgroundColor: window.chartColors.red,
                     borderColor: window.chartColors.red,
                     data: [
-                        '0', '0'
+                        '100', '100'
                     ]
                 }]
             },
@@ -141,12 +165,18 @@
                 scales: {
                     xAxes: [{
                         stacked: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Disk',
+                            fontSize: 14
+                        },
                     }],
                     yAxes: [{
                         stacked: true,
                         scaleLabel: {
                             display: true,
-                            labelString: 'Usage (%)'
+                            labelString: 'Usage (%)',
+                            fontSize:14
                         },
                         ticks: {
                             min: 0,
@@ -211,7 +241,25 @@
                             labelString: 'Bytes/sec'
                         }
                     }]
-                }
+                },
+                plugins: {
+                    datalabels: {
+                        backgroundColor: function (context) {
+                            return context.dataset.backgroundColor;
+                        },
+                        borderRadius: 4,
+                        color: 'white',
+                        display: function (context) {
+                            return context.dataset.data[context.dataIndex] > 10000;
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 16
+                        },
+                        formatter: Math.round,
+                        padding: 6
+                    }
+                },
             }
         };
 
@@ -269,7 +317,25 @@
                             labelString: 'Count'
                         }
                     }]
-                }
+                },
+                plugins: {
+                    datalabels: {
+                        backgroundColor: function (context) {
+                            return context.dataset.backgroundColor;
+                        },
+                        borderRadius: 4,
+                        color: 'white',
+                        display: function (context) {
+                            return context.dataset.data[context.dataIndex] > 10000;
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 16
+                        },
+                        formatter: Math.round,
+                        padding: 6
+                    }
+                },
             }
         };
     </script>
@@ -299,20 +365,16 @@
                         //$("#myCPU").text(item.Id);
                     });
 
-                    //var cpuUsage = response.d;
-                    //var cpuUsage2 = Math.floor(cpuUsage);
-
                     now = new Date();
                     time = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' + (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
                     labels.push(time);
-                    //config.data.datasets.forEach(function (dataset) {
-                    //    dataset.data.push(cpuUsage2);
-                    //});
+
+                    cpu = Math.round(cpu);
+                    memory = Math.round(memory);
                     config.data.datasets[0].data.push(cpu);
                     config.data.datasets[1].data.push(memory);
 
-                    //$("#myCPU").text(cpu);
-
+                    window.myLine.update();
                 },
                 failure: function (data) {
                     alert(data.d);
@@ -326,7 +388,6 @@
                 });
             }
 
-            window.myLine.update();
             count++;
         }
 
@@ -335,6 +396,8 @@
             var total = 0;
             var free = 0;
             var usage = 0;
+            var datasets = configBar.data.datasets;
+            var labels = configBar.data.labels;
 
             $.ajax({
                 type: "POST",
@@ -355,8 +418,8 @@
                             usage = ((total - free) / total) * 10000;
                             free = (free / total) * 10000;
 
-                            usage = Math.floor(usage) / 100;
-                            free = Math.floor(free) / 100;
+                            usage = Math.round(usage) / 100;
+                            free = Math.round(free) / 100;
 
                             var dataset = configPie.data.datasets;
                             for (var i = 0; i < dataset.length; i++) {
@@ -375,36 +438,35 @@
                             free = item.Free;
 
                             usage = ((total - free) / total) * 10000;
-                            usage = Math.floor(usage) / 100;
-
-                            var dataset = configBar.data.datasets;
-                            var labels = configBar.data.labels;
+                            usage = Math.round(usage) / 100;
 
                             labels.push(item.Id);
                             labels.shift();
 
-                            for (var i = 0; i < dataset.length; i++) {
+                            for (var i = 0; i < datasets.length; i++) {
                                 //데이터 갯수 만큼 반복
-                                var data = dataset[i].data;
+                                var data = datasets[i].data;
+
                                 data.push(usage);
                                 data.shift();
+                                
+                                $("#myCPU").text("Data:" + data);
 
                             }
 
                         }
                     });
 
-                    //$("#myCPU").text("Usage:" + usage + ",Free:" + free);
+                    window.myPie.update();
+                    window.myBar.update();
 
                 },
                 failure: function (data) {
                     alert(data.d);
                 }
+
             });
 
-
-            window.myPie.update();
-            window.myBar.update();
         }
 
         var updateNetworkData = function () {
@@ -434,9 +496,15 @@
 
                     now = new Date();
                     time = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' + (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
+
+                    sent = Math.round(sent);
+                    received = Math.round(received);
+
                     labels.push(time);
                     configNetwork.data.datasets[0].data.push(sent);
                     configNetwork.data.datasets[1].data.push(received);
+
+                    window.myNetwork.update();
                 },
                 failure: function (data) {
                     alert(data.d);
@@ -450,7 +518,6 @@
                 });
             }
 
-            window.myNetwork.update();
             networkCnt++;
         }
 
@@ -468,7 +535,7 @@
                 success: function (data) {
                     var Obj = JSON.parse(data.d);
 
-                    $("#myCPU").text(data.d);
+                    //$("#myCPU").text(data.d);
 
                     $.each(Obj, function (i, item) {
                         //alert(item["Id"] + " : " + item["Val"]);
@@ -484,6 +551,8 @@
                     labels.push(time);
                     configProcess.data.datasets[0].data.push(process);
                     configProcess.data.datasets[1].data.push(thread);
+
+                    window.myProcess.update();
                 },
                 failure: function (data) {
                     alert(data.d);
@@ -496,8 +565,6 @@
                     dataset.data.shift();
                 });
             }
-
-            window.myProcess.update();
             processCnt++;
         }
 
@@ -573,34 +640,30 @@
             <td colspan="3" style="height:50px;"></td>
         </tr>
         <tr>
-            <td>
-                <div style="width:100%">
-                    <canvas id="chart-pie"></canvas>
-                </div>
+            <td colspan="3">
+                <table border="0" style="width:100%;">
+                    <tr>
+                        <td style="width:36%">
+                            <div style="width:100%">
+                                <canvas id="chart-process"></canvas>
+                            </div>
+                        </td>
+                        <td style="width:0%;"></td>
+                        <td style="width:32%">
+                            <div style="width:100%">
+                                <canvas id="chart-pie"></canvas>
+                            </div>
+                        </td>
+                        <td style="width:0%;"></td>
+                        <td style="width:32%">
+                            <div style="width:100%">
+                                <canvas id="chart-bar"></canvas>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </td>
-            <td style="width:4%;"></td>
-            <td>
-                <div style="width:100%">
-                    <canvas id="chart-bar"></canvas>
-                </div>
-            </td>
-
-        </tr>
-        <tr>
-            <td colspan="3" style="height:50px;"></td>
-        </tr>
-        <tr>
-            <td>
-                <div style="width:100%">
-                    <canvas id="chart-process"></canvas>
-                </div>
-            </td>
-            <td style="width:4%;"></td>
-            <td>
-            </td>
-
         </tr>
     </table>
-
 </body>
 </html >
